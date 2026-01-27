@@ -8,9 +8,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserDto {
+public class UserDto implements Comparable<UserDto> {
     private Long id;
     private String userName;
     private String email;
     private LocalDateTime createdAt;
+
+    @Override
+    public int compareTo(UserDto other) {
+        return this.id.compareTo(other.id);
+    }
 }

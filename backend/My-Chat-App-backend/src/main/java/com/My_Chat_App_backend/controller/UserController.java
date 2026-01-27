@@ -8,10 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("/users")
@@ -46,7 +43,7 @@ public class UserController {
 
     @GetMapping("/search/{part}")
     public ResponseEntity<List<UserDto>> searchUsers(@PathVariable String part) {
-        Set<UserDto> userSet = new HashSet<>();
+        Set<UserDto> userSet = new TreeSet<>();
         userSet.addAll(userService.searchUsersByEmail(part));
         userSet.addAll(userService.searchUsersByUsername(part));
         return ResponseEntity.ok(new ArrayList<>(userSet));
