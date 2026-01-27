@@ -1,0 +1,132 @@
+<div class="room-list">
+    <!-- Create Room Button -->
+    <button class="create-room-btn" (click)="openCreateModal()">
+        <span class="icon">+</span>
+        <span>New Room</span>
+    </button>
+
+    <!-- Loading State -->
+    @if (loading()) {
+    <div class="loading">Loading rooms...</div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+    <div class="error">
+        {{ error() }}
+        <button (click)="loadRooms()">Retry</button>
+    </div>
+    }
+
+    <!-- Room List -->
+    <div class="rooms">
+        @for (room of rooms(); track room.id) {
+        <div class="room-item" [class.selected]="selectedRoomId() === room.id" (click)="selectRoom(room)">
+            <div class="room-avatar">
+                {{ getRoomName(room).charAt(0).toUpperCase() }}
+            </div>
+            <div class="room-info">
+                <span class="room-name">{{ getRoomName(room) }}</span>
+                <span class="room-type">{{ room.isPrivate ? 'Private' : 'Group' }}</span>
+            </div>
+        </div>
+        } @empty {
+        @if (!loading()) {
+        <div class="empty">No chat rooms yet</div>
+        }
+        }
+    </div>
+</div>
+
+<!-- Create Room Modal -->
+@if (showCreateModal()) {
+<div class="modal-overlay" (click)="$event.stopPropagation(); closeCreateModal()">
+    <div class="modal-card bg-dark border border-white border-opacity-10 rounded-4 overflow-hidden shadow-lg"
+        (click)="$event.stopPropagation()" style="width: 100%; max-width: 450px;">
+        <!-- Modal Header -->
+        <div class="p-4 border-bottom border-white border-opacity-10 d-flex justify-content-between align-items-center">
+            <h3 class="m-0 fs-5 text-white">New Chat</h3>
+            <button class="btn-close btn-close-white" (click)="closeCreateModal()"></button>
+        </div>
+
+        <!-- Modal Tabs -->
+        <div class="d-flex border-bottom border-white border-opacity-10">
+            <button class="flex-grow-1 p-3 border-0 bg-transparent text-white opacity-50 transition"
+                [class.opacity-100]="activeTab() === 'private'" [class.border-bottom-2]="activeTab() === 'private'"
+                style="border-bottom: 2px solid transparent;"
+                [style.border-bottom-color]="activeTab() === 'private' ? '#667eea' : 'transparent'"
+                (click)="activeTab.set('private')">
+                Direct Message
+            </button>
+            <button class="flex-grow-1 p-3 border-0 bg-transparent text-white opacity-50 transition"
+                [class.opacity-100]="activeTab() === 'group'" [class.border-bottom-2]="activeTab() === 'group'"
+                style="border-bottom: 2px solid transparent;"
+                [style.border-bottom-color]="activeTab() === 'group' ? '#667eea' : 'transparent'"
+                (click)="activeTab.set('group')">
+                Group Chat
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-4">
+            @if (activeTab() === 'private') {
+            <div class="search-section">
+                <div class="input-group mb-3">
+                    <span
+                        class="input-group-text bg-white bg-opacity-10 border-white border-opacity-25 text-white border-end-0">
+                        🔍
+                    </span>
+                    <input type="text"
+                        class="form-control bg-white bg-opacity-10 border-white border-opacity-25 text-white border-start-0 shadow-none ps-0"
+                        [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Search users by name or email...">
+                </div>
+
+                <div class="search-results overflow-auto" style="max-height: 250px;">
+                    @if (isSearching()) {
+                    <div class="text-center py-4 text-white text-opacity-50">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Searching...
+                    </div>
+                    } @else {
+                    @for (user of searchResults(); track user.id) {
+                    <div class="user-item d-flex align-items-center gap-3 p-2 rounded-3 cursor-pointer transition"
+                        (click)="startPrivateChat(user)" style="cursor: pointer;">
+                        <div class="avatar-small rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-semibold"
+                            style="width: 32px; height: 32px; font-size: 0.8rem;">
+                            {{ user.userName.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="user-info">
+                            <div class="text-white small fw-medium">{{ user.userName }}</div>
+                            <div class="text-white text-opacity-50" style="font-size: 0.7rem;">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    } @empty {
+                    <div class="text-center py-4 text-white text-opacity-50 small">
+                        @if (searchQuery().length >= 2) {
+                        No users found matching "{{ searchQuery() }}"
+                        } @else {
+                        Type at least 2 characters to search
+                        }
+                    </div>
+                    }
+                    }
+                </div>
+            </div>
+            } @else {
+            <div class="group-section">
+                <div class="mb-3">
+                    <label class="form-label text-white text-opacity-75 small uppercase fw-bold">Room Name</label>
+                    <input type="text"
+                        class="form-control bg-white bg-opacity-10 border-white border-opacity-25 text-white px-3 py-2 shadow-none"
+                        [(ngModel)]="newRoomName" placeholder="Enter group name..." (keyup.enter)="createRoom()">
+                </div>
+                <button class="btn w-100 text-white fw-semibold py-2 transition" [disabled]="!newRoomName.trim()"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" (click)="createRoom()">
+                    Create Group Chat
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+</div>
+}

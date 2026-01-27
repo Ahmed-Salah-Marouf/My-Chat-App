@@ -1,0 +1,22 @@
+<div class="chat-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Chat Rooms</h2>
+    </div>
+    <app-chat-room-list (roomSelected)="onRoomSelected($event)" />
+  </aside>
+  
+  <main class="chat-main">
+    @if (selectedRoom()) {
+      <app-chat-room [room]="selectedRoom()!" />
+    } @else {
+      <div class="no-room-selected">
+        <div class="placeholder">
+          <span class="icon">💬</span>
+          <h3>Select a chat room</h3>
+          <p>Choose a room from the sidebar to start chatting</p>
+        </div>
+      </div>
+    }
+  </main>
+</div>

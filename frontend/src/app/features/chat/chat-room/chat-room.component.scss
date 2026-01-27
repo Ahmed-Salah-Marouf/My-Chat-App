@@ -1,0 +1,38 @@
+.chat-room {
+    height: 100%;
+}
+
+.messages-container {
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+}
+
+.message-bubble {
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: scale(1.01);
+    }
+}
+
+.send-btn {
+    transition: transform 0.2s, opacity 0.2s;
+
+    &:hover:not(:disabled) {
+        transform: scale(1.05);
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+}
