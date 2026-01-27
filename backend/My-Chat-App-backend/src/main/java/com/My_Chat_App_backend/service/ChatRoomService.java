@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,6 +43,17 @@ public class ChatRoomService {
     }
 
     public ChatRoomDto createChatRoom(ChatRoom chatRoom) {
+        if (chatRoom.getParticipants() != null) {
+            // Fetch full User entities for participants
+            List<User> fullParticipants = chatRoom.getParticipants().stream()
+                    .map(user -> userService.getUserEntityById(user.getId()))
+                    .toList();
+            chatRoom.setParticipants(new ArrayList<>(fullParticipants));
+
+            // Set isPrivate based on number of participants
+            chatRoom.setPrivate(chatRoom.getParticipants().size() <= 2);
+        }
+
         ChatRoom saveChatRoom = chatRoomRepository.save(chatRoom);
         return mapToDto(saveChatRoom);
     }
@@ -63,6 +75,7 @@ public class ChatRoomService {
         ChatRoom chatRoom = getChatRoomEntityById(chatRoomId);
         User user = userService.getUserEntityById(userId);
         chatRoom.getParticipants().add(user);
+        chatRoom.setPrivate(chatRoom.getParticipants().size() <= 2);
         chatRoomRepository.save(chatRoom);
         return mapToDto(chatRoom);
     }
@@ -94,6 +107,7 @@ public class ChatRoomService {
         ChatRoom chatRoom = getChatRoomEntityById(chatRoomId);
         User user = userService.getUserEntityById(userId);
         chatRoom.getParticipants().remove(user);
+        chatRoom.setPrivate(chatRoom.getParticipants().size() <= 2);
         chatRoomRepository.save(chatRoom);
         return mapToDto(chatRoom);
     }
@@ -113,6 +127,8 @@ public class ChatRoomService {
                 .name(chatRoom.getName())
                 .createdAt(chatRoom.getCreatedAt())
                 .isPrivate(chatRoom.isPrivate())
+                .participants(chatRoom.getParticipants() != null ? 
+                    chatRoom.getParticipants().stream().map(userService::mapToDto).toList() : new java.util.ArrayList<>())
                 .build();
     }
 }
