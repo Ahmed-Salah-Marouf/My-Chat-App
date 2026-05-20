@@ -5,6 +5,8 @@ import com.My_Chat_App_backend.entity.User;
 import com.My_Chat_App_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -79,4 +81,9 @@ public class UserService {
                 .build();
     }
 
+    public UserDto getMe() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return getUserByEmail(email);
+    }
 }
