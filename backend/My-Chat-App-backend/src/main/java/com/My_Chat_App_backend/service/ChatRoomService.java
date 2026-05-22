@@ -53,6 +53,14 @@ public class ChatRoomService {
             // Set isPrivate based on number of participants
             chatRoom.setPrivate(chatRoom.getParticipants().size() <= 2);
         }
+        if (chatRoom.getParticipants() == null) {
+            chatRoom.setParticipants(new ArrayList<>());
+            chatRoom.setPrivate(true);
+        }
+        UserDto me = userService.getMe();
+        if (chatRoom.getParticipants().stream().noneMatch(user -> user.getId().equals(me.getId()))) {
+            chatRoom.getParticipants().add(userService.getUserEntityById(me.getId()));
+        }
 
         ChatRoom saveChatRoom = chatRoomRepository.save(chatRoom);
         return mapToDto(saveChatRoom);
