@@ -13,4 +13,5 @@ export interface ChatRoom {
 export interface CreateChatRoomRequest {
     name: string;
     isPrivate?: boolean;
+    participants?: { id: number }[];
 }

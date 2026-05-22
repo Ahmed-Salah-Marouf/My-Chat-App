@@ -1,0 +1,62 @@
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Logo / Brand -->
+            <div class="auth-header">
+                <div class="logo">💬</div>
+                <h1>Welcome Back</h1>
+                <p>Sign in to continue to Chat App</p>
+            </div>
+
+            <!-- Error -->
+            @if (error()) {
+            <div class="error-banner">
+                <span>⚠️</span> {{ error() }}
+            </div>
+            }
+
+            <!-- Form -->
+            <form (ngSubmit)="onSubmit()" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        [(ngModel)]="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        autocomplete="email"
+                        [disabled]="loading()"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        [(ngModel)]="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        [disabled]="loading()"
+                    >
+                </div>
+
+                <button type="submit" class="auth-btn" [disabled]="loading()">
+                    @if (loading()) {
+                        <span class="spinner"></span>
+                        Signing in...
+                    } @else {
+                        Sign In
+                    }
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                <p>Don't have an account? <a routerLink="/register">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,7 +2,7 @@ import { Component, inject, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatRoom, CreateChatRoomRequest, User } from '../../../core/models';
-import { ChatRoomService, UserService } from '../../../core/services';
+import { ChatRoomService, UserService, AuthService } from '../../../core/services';
 
 @Component({
     selector: 'app-chat-room-list',
@@ -14,6 +14,7 @@ import { ChatRoomService, UserService } from '../../../core/services';
 export class ChatRoomListComponent implements OnInit {
     private chatRoomService = inject(ChatRoomService);
     private userService = inject(UserService);
+    private authService = inject(AuthService);
 
     rooms = signal<ChatRoom[]>([]);
     selectedRoomId = signal<number | null>(null);
@@ -24,14 +25,21 @@ export class ChatRoomListComponent implements OnInit {
 
     // Search related
     searchQuery = signal('');
-    searchResults = signal<import('../../../core/models').User[]>([]);
+    searchResults = signal<User[]>([]);
     isSearching = signal(false);
     activeTab = signal<'group' | 'private'>('private');
 
+    // Group member selection
+    selectedMembers = signal<User[]>([]);
+    groupSearchQuery = signal('');
+    groupSearchResults = signal<User[]>([]);
+    isGroupSearching = signal(false);
+
     roomSelected = output<ChatRoom>();
 
-    // TODO: Replace with actual user ID from auth
-    currentUserId = 1;
+    get currentUserId(): number {
+        return this.authService.getCurrentUserId();
+    }
 
     ngOnInit(): void {
         this.loadRooms();
@@ -70,12 +78,18 @@ export class ChatRoomListComponent implements OnInit {
     openCreateModal(): void {
         this.showCreateModal.set(true);
         this.newRoomName = '';
+        this.selectedMembers.set([]);
+        this.groupSearchQuery.set('');
+        this.groupSearchResults.set([]);
+        this.searchQuery.set('');
+        this.searchResults.set([]);
     }
 
     closeCreateModal(): void {
         this.showCreateModal.set(false);
     }
 
+    // --- Private chat search ---
     onSearch(): void {
         const query = this.searchQuery().trim();
         if (query.length < 2) {
@@ -86,7 +100,6 @@ export class ChatRoomListComponent implements OnInit {
         this.isSearching.set(true);
         this.userService.searchUsers(query).subscribe({
             next: (users) => {
-                // Filter out current user from results
                 this.searchResults.set(users.filter(u => u.id !== this.currentUserId));
                 this.isSearching.set(false);
             },
@@ -97,6 +110,44 @@ export class ChatRoomListComponent implements OnInit {
         });
     }
 
+    // --- Group chat member search ---
+    onGroupSearch(): void {
+        const query = this.groupSearchQuery().trim();
+        if (query.length < 2) {
+            this.groupSearchResults.set([]);
+            return;
+        }
+
+        this.isGroupSearching.set(true);
+        this.userService.searchUsers(query).subscribe({
+            next: (users) => {
+                // Filter out current user and already-selected members
+                const selectedIds = this.selectedMembers().map(m => m.id);
+                this.groupSearchResults.set(
+                    users.filter(u => u.id !== this.currentUserId && !selectedIds.includes(u.id))
+                );
+                this.isGroupSearching.set(false);
+            },
+            error: (err) => {
+                console.error('Error searching users:', err);
+                this.isGroupSearching.set(false);
+            }
+        });
+    }
+
+    addMember(user: User): void {
+        this.selectedMembers.update(members => [...members, user]);
+        // Remove from search results
+        this.groupSearchResults.update(results => results.filter(u => u.id !== user.id));
+        this.groupSearchQuery.set('');
+        this.groupSearchResults.set([]);
+    }
+
+    removeMember(user: User): void {
+        this.selectedMembers.update(members => members.filter(m => m.id !== user.id));
+    }
+
+    // --- Create actions ---
     startPrivateChat(targetUser: User): void {
         const request: CreateChatRoomRequest = {
             name: `${targetUser.userName}`,
@@ -105,10 +156,6 @@ export class ChatRoomListComponent implements OnInit {
 
         this.chatRoomService.createChatRoom(request).subscribe({
             next: (room) => {
-                // Backend will handle adding participants if needed, 
-                // but usually the room creation should include them.
-                // For simplicity, let's assume the backend handles the initial participant (creator)
-                // and we might need an extra step if the backend doesn't add the targetUser automatically.
                 this.chatRoomService.addParticipantToChatRoom(room.id, targetUser.id).subscribe({
                     next: (updatedRoom) => {
                         this.rooms.update(rooms => [...rooms, updatedRoom]);
@@ -126,9 +173,12 @@ export class ChatRoomListComponent implements OnInit {
     createRoom(): void {
         if (!this.newRoomName.trim()) return;
 
+        const memberIds = this.selectedMembers().map(m => ({ id: m.id }));
+
         const request: CreateChatRoomRequest = {
             name: this.newRoomName.trim(),
-            isPrivate: false
+            isPrivate: false,
+            participants: memberIds
         };
 
         this.chatRoomService.createChatRoom(request).subscribe({

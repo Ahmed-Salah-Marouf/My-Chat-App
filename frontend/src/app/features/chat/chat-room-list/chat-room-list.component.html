@@ -118,8 +118,65 @@
                     <label class="form-label text-white text-opacity-75 small uppercase fw-bold">Room Name</label>
                     <input type="text"
                         class="form-control bg-white bg-opacity-10 border-white border-opacity-25 text-white px-3 py-2 shadow-none"
-                        [(ngModel)]="newRoomName" placeholder="Enter group name..." (keyup.enter)="createRoom()">
+                        [(ngModel)]="newRoomName" placeholder="Enter group name...">
                 </div>
+
+                <!-- Selected Members Chips -->
+                @if (selectedMembers().length > 0) {
+                <div class="mb-3">
+                    <label class="form-label text-white text-opacity-75 small uppercase fw-bold">Members</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        @for (member of selectedMembers(); track member.id) {
+                        <span class="badge d-flex align-items-center gap-1 px-2 py-1"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 0.8rem;">
+                            {{ member.userName }}
+                            <button class="btn-close btn-close-white ms-1" style="font-size: 0.5rem;"
+                                (click)="removeMember(member)"></button>
+                        </span>
+                        }
+                    </div>
+                </div>
+                }
+
+                <!-- Add Members Search -->
+                <div class="mb-3">
+                    <label class="form-label text-white text-opacity-75 small uppercase fw-bold">Add Members</label>
+                    <div class="input-group mb-2">
+                        <span
+                            class="input-group-text bg-white bg-opacity-10 border-white border-opacity-25 text-white border-end-0">
+                            🔍
+                        </span>
+                        <input type="text"
+                            class="form-control bg-white bg-opacity-10 border-white border-opacity-25 text-white border-start-0 shadow-none ps-0"
+                            [(ngModel)]="groupSearchQuery" (input)="onGroupSearch()"
+                            placeholder="Search users to add...">
+                    </div>
+
+                    <div class="search-results overflow-auto" style="max-height: 150px;">
+                        @if (isGroupSearching()) {
+                        <div class="text-center py-2 text-white text-opacity-50 small">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            Searching...
+                        </div>
+                        } @else {
+                        @for (user of groupSearchResults(); track user.id) {
+                        <div class="user-item d-flex align-items-center gap-3 p-2 rounded-3 cursor-pointer transition"
+                            (click)="addMember(user)" style="cursor: pointer;">
+                            <div class="avatar-small rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-semibold"
+                                style="width: 28px; height: 28px; font-size: 0.7rem;">
+                                {{ user.userName.charAt(0).toUpperCase() }}
+                            </div>
+                            <div class="user-info">
+                                <div class="text-white small fw-medium">{{ user.userName }}</div>
+                                <div class="text-white text-opacity-50" style="font-size: 0.65rem;">{{ user.email }}</div>
+                            </div>
+                            <span class="ms-auto text-white text-opacity-50 small">+ Add</span>
+                        </div>
+                        }
+                        }
+                    </div>
+                </div>
+
                 <button class="btn w-100 text-white fw-semibold py-2 transition" [disabled]="!newRoomName.trim()"
                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" (click)="createRoom()">
                     Create Group Chat
